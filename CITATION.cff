@@ -1,0 +1,19 @@
+cff-version: 1.6.0
+message: "If you use this protocol package, please cite both collaborators."
+title: "AI-for-Science Validation Protocol Package"
+type: software
+authors:
+  - name: "Stephen P. Lutar Jr."
+    orcid: "https://orcid.org/0009-0001-0110-4173"
+  - name: "ankitjha2519020708"
+repository-code: "https://github.com/szl-holdings/aifor-science-protocol"
+license: CC-BY-4.0
+version: "0.1.0"
+date-released: "2026-11-05"
+keywords:
+  - ai-for-science
+  - validation-bottleneck
+  - pre-registered-protocol
+  - intention-to-treat
+  - minimum-relevant-difference
+  - hypothesis-generation

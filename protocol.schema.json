@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AI-for-Science Validation Protocol Package",
+  "version": "0.1.0",
+  "type": "object",
+  "required": ["protocol_version", "locked_decisions", "accounting_rule", "mrd", "adjudication", "queue_snapshot_spec", "framing_note"],
+  "properties": {
+    "protocol_version": {"type": "string", "pattern": "^v\\d+\\.\\d+\\.\\d+(-[a-z]+)?$"},
+    "frozen_at": {"type": "string", "format": "date-time"},
+    "collaborators": {
+      "type": "array",
+      "items": {"type": "object", "properties": {"name": {"type": "string"}, "role": {"type": "string"}}}
+    },
+    "locked_decisions": {
+      "type": "object",
+      "required": ["randomization_unit", "attempt_accounting", "mrd_definition", "adjudication"],
+      "properties": {
+        "randomization_unit": {"enum": ["cluster", "candidate"]},
+        "attempt_accounting": {"enum": ["itt_primary_perprotocol_secondary"]},
+        "mrd_definition": {"enum": ["validated_outcome_scale_decision_anchored"]},
+        "adjudication": {"enum": ["separate_stopping_and_inconclusive"]}
+      }
+    },
+    "accounting_rule": {
+      "type": "object",
+      "required": ["primary", "secondary", "resource_ledger", "decision_ledger"],
+      "properties": {
+        "primary": {
+          "type": "object",
+          "required": ["name", "unit_definition", "exclusions"],
+          "properties": {
+            "name": {"const": "intention-to-treat"},
+            "unit_definition": {"type": "string"},
+            "exclusions": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "secondary": {
+          "type": "object",
+          "required": ["name", "exclusions"],
+          "properties": {
+            "name": {"const": "per-protocol"},
+            "exclusions": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "resource_ledger": {
+          "type": "object",
+          "required": ["states"],
+          "properties": {
+            "states": {
+              "type": "array",
+              "items": {"enum": ["reserved", "consumed", "failed", "unavailable"]}
+            }
+          }
+        },
+        "decision_ledger": {
+          "type": "object",
+          "required": ["states"],
+          "properties": {
+            "states": {
+              "type": "array",
+              "items": {"enum": ["chosen", "deferred", "rejected", "attempted", "failed", "unattempted", "characterization-pending", "validated", "inconclusive"]}
+            }
+          }
+        }
+      }
+    },
+    "mrd": {
+      "type": "object",
+      "required": ["definition", "interpretation_rule"],
+      "properties": {
+        "definition": {"type": "string"},
+        "decision_anchored": {"type": "boolean"},
+        "baseline_rate": {"type": "number"},
+        "assessment_window": {"type": "string"},
+        "interpretation_rule": {"type": "string"}
+      }
+    },
+    "adjudication": {
+      "type": "object",
+      "required": ["stopping_rule_owner", "inconclusive_adjudicator"],
+      "properties": {
+        "stopping_rule_owner": {"type": "object", "properties": {"name": {"type": "string"}, "evidence_required": {"type": "boolean"}}},
+        "inconclusive_adjudicator": {"type": "object", "properties": {"name": {"type": "string"}, "criterion": {"type": "string"}}}
+      }
+    },
+    "queue_snapshot_spec": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["pending", "contributed", "frozen"]},
+        "eligibility": {"type": "array"},
+        "exclusions": {"type": "array"},
+        "contamination_controls": {"type": "array"},
+        "cluster_fields": {"type": "array"}
+      }
+    },
+    "framing_note": {"type": "string"}
+  }
+}
