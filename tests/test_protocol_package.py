@@ -149,6 +149,13 @@ def _error_summary(errors: list) -> list[tuple[list, str]]:
     return [(list(e.absolute_path), e.message) for e in errors]
 
 
+def _set_path(doc: dict, path: tuple[str, ...], value: object) -> None:
+    target = doc
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+
+
 # --------------------------------------------------------------------------
 # The schema itself
 # --------------------------------------------------------------------------
@@ -293,10 +300,7 @@ def test_synthetic_instance_from_protocol_md_is_valid() -> None:
 )
 def test_schema_rejects_invalid_values(path: tuple[str, ...], value: str) -> None:
     doc = _synthetic_instance()
-    target = doc
-    for key in path[:-1]:
-        target = target[key]
-    target[path[-1]] = value
+    _set_path(doc, path, value)
     errors = list(VALIDATOR.iter_errors(doc))
     assert any(tuple(e.absolute_path) == path for e in errors), _error_summary(errors)
 
@@ -323,3 +327,53 @@ def test_schema_requires_each_top_level_section(key: str) -> None:
         e.validator == "required" and e.message == f"{key!r} is a required property"
         for e in errors
     ), _error_summary(errors)
+
+
+# --------------------------------------------------------------------------
+# Proof boundary: PROTOCOL.md rules the schema does NOT enforce
+# --------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("path", "value"),
+    [
+        pytest.param(
+            ("accounting_rule", "primary", "exclusions"),
+            ["post-hoc reclassification"],
+            id="itt-with-exclusions",
+        ),
+        pytest.param(
+            ("accounting_rule", "secondary", "exclusions"),
+            ["result looked wrong"],
+            id="per-protocol-exclusion-outside-a-to-c",
+        ),
+        pytest.param(
+            ("accounting_rule", "resource_ledger", "states"),
+            ["reserved", "reserved"],
+            id="ledger-states-repeated-or-missing",
+        ),
+        pytest.param(
+            ("mrd",),
+            {"definition": "placeholder", "interpretation_rule": "placeholder"},
+            id="mrd-without-items-a-to-d",
+        ),
+        pytest.param(
+            ("adjudication",),
+            {"stopping_rule_owner": {}, "inconclusive_adjudicator": {}},
+            id="adjudicators-unnamed-no-timestamp",
+        ),
+        pytest.param(("framing_notes",), "misspelled key", id="unknown-key"),
+    ],
+)
+def test_schema_does_not_enforce_prose_only_rules(
+    path: tuple[str, ...], value: object
+) -> None:
+    """Each case breaks a PROTOCOL.md rule yet passes the schema.
+
+    README.md's proof boundary lists these gaps. If a case starts failing,
+    the schema became stricter: move the case to the rejection tests above
+    and update the proof boundary in README.md.
+    """
+    doc = _synthetic_instance()
+    _set_path(doc, path, value)
+    assert VALIDATOR.is_valid(doc)
