@@ -1,5 +1,8 @@
-# Pinned dependencies for the consistency tests in tests/ (python -m pytest).
-# Used by .github/workflows/ci.yml and README.md; Dependabot (pip) bumps them.
+# Top-level pins for the consistency tests in tests/ (python -m pytest), as
+# used by the README Quickstart. CI installs requirements/ci/test.txt, the
+# hash-locked closure compiled from this file: recompile it after any change
+# here (see requirements/ci/test.in; tests/test_ci_requirements_lock.py fails
+# on drift). Dependabot's pip entries watch this file and requirements/ci/.
 jsonschema==4.26.0
 PyYAML==6.0.3
 pytest==9.2.0

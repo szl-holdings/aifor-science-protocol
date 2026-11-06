@@ -35,8 +35,9 @@ A pre-declared, versioned experimental protocol that separates:
 | [`PROTOCOL.md`](PROTOCOL.md) | The full protocol package: accounting rule, MRD, adjudication roles, queue snapshot spec structure, framing note, version-freeze mechanism |
 | [`protocol.schema.json`](protocol.schema.json) | JSON Schema (draft 2020-12) for a machine-readable protocol document |
 | [`CITATION.cff`](CITATION.cff) | Citation metadata (CFF 1.2.0) |
-| [`tests/`](tests/) | Consistency tests across `PROTOCOL.md`, the schema, this README and `CITATION.cff` |
-| [`requirements-test.txt`](requirements-test.txt), [`requirements-citation.txt`](requirements-citation.txt) | Pinned validator versions used by the tests and by CI |
+| [`tests/`](tests/) | Consistency tests across `PROTOCOL.md`, the schema, this README and `CITATION.cff`, plus a contract test for CI's hash-locked installs |
+| [`requirements-test.txt`](requirements-test.txt), [`requirements-citation.txt`](requirements-citation.txt) | Top-level pins of the validators used by the tests (Quickstart below) |
+| [`requirements/ci/`](requirements/ci/) | Hash-locked closures of those pins (`uv pip compile --generate-hashes`); CI installs only these, with `pip install --require-hashes` |
 
 The queue snapshot spec (`PROTOCOL.md` §4) is pending from the collaborator.
 
@@ -89,12 +90,12 @@ python -m venv .venv-cff
 
 Expected output: `Citation metadata are valid according to schema version 1.2.0.`
 
-CI runs the same checks in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push to `main` and on every pull request.
+CI runs the same checks in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) on every push to `main` and on every pull request. It installs the same pinned versions from the hash-locked closures in [`requirements/ci/`](requirements/ci/), so pip checks every downloaded file against a SHA-256 recorded in this repository. To install exactly what CI installs for the tests, use `.venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements/ci/test.txt`.
 
 ## Proof boundary
 
 - **What is here:** a protocol text and a JSON Schema for its machine-readable form. **What is not here:** any experiment, data, analysis or result. Nothing in this repository shows that a candidate policy improves validated outcomes, or that a current policy is failing; `PROTOCOL.md` §5 draws the same line.
-- **What the tests show:** internal consistency only. The schema is a valid JSON Schema 2020-12 document; its ledger states and locked decisions match `PROTOCOL.md`; the version, collaborators and citation metadata agree across files; relative links resolve.
+- **What the tests show:** internal consistency only. The schema is a valid JSON Schema 2020-12 document; its ledger states and locked decisions match `PROTOCOL.md`; the version, collaborators and citation metadata agree across files; relative links resolve. `tests/test_ci_requirements_lock.py` reads the workflow and lock files and checks that every CI `pip install` uses `--require-hashes` with a lock in `requirements/ci/` that matches the top-level pins; it does not show what a runner downloaded (the CI log does).
 - **What the schema does not check:** a document can pass the schema and still break `PROTOCOL.md`. The schema does not check that the ITT ledger has no exclusions, that per-protocol exclusions are limited to items (a)–(c), that each ledger lists its states exactly once, that the MRD record carries items (a)–(d), that both adjudication roles are named with trigger evidence and timestamp, or that a document has no unknown or misspelled keys. These need human review. `tests/` pins each of these gaps, so a stricter schema fails that test until this list is updated.
 - **Freeze status:** `v0.1.0-draft` is a lightweight (unsigned) git tag on the initial protocol commit, made before `protocol.schema.json`, `CITATION.cff` and `LICENSE` were added. The `v1.0.0-frozen` tag described in `PROTOCOL.md` §6 does not exist yet. Git commit dates are set by the committer, so the repository on its own is not an independent timestamp for "pre-declared".
 

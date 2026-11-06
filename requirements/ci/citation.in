@@ -1,0 +1,9 @@
+# Hash-locked closure that .github/workflows/ci.yml installs into the separate
+# cffconvert virtualenv (Python 3.12), with --require-hashes.
+# The top-level pin stays in requirements-citation.txt (README Quickstart;
+# Dependabot "/" entry). Regenerate citation.txt whenever
+# requirements-citation.txt changes (tests/test_ci_requirements_lock.py fails
+# on drift):
+#   uv pip compile --universal --generate-hashes --python-version 3.12 \
+#     requirements/ci/citation.in -o requirements/ci/citation.txt
+-r ../../requirements-citation.txt

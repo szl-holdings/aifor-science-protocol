@@ -1,0 +1,8 @@
+# Hash-locked closure that .github/workflows/ci.yml installs for the schema
+# check and the consistency tests (Python 3.12), with --require-hashes.
+# The top-level pins stay in requirements-test.txt (README Quickstart;
+# Dependabot "/" entry). Regenerate test.txt whenever requirements-test.txt
+# changes (tests/test_ci_requirements_lock.py fails on drift):
+#   uv pip compile --universal --generate-hashes --python-version 3.12 \
+#     requirements/ci/test.in -o requirements/ci/test.txt
+-r ../../requirements-test.txt
