@@ -1,0 +1,8 @@
+# Python bytecode and test caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local virtual environments (README.md uses .venv and .venv-cff)
+.venv/
+.venv-cff/
