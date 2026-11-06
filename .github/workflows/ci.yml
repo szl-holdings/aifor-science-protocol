@@ -3,9 +3,10 @@ name: CI
 
 # This repository is a protocol specification: PROTOCOL.md, a JSON Schema
 # (protocol.schema.json) and a CITATION.cff. The checks below prove that the
-# machine-readable artifacts parse and that the schema is a valid JSON Schema
-# 2020-12 document, so that Dependabot's github-actions ecosystem has a real
-# manifest to maintain.
+# schema is a valid JSON Schema 2020-12 document, that PROTOCOL.md, the schema,
+# README.md and CITATION.cff agree with each other (tests/), and that
+# CITATION.cff passes the strict CFF validator. They prove nothing about any
+# experiment: none exists in this repository.
 
 on:
   push:
@@ -36,10 +37,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install pinned validators
+      - name: Install pinned test dependencies
         run: >-
           python -m pip install --disable-pip-version-check --no-cache-dir
-          "jsonschema==4.23.0" "PyYAML==6.0.3"
+          -r requirements-test.txt
 
       - name: Validate protocol.schema.json against JSON Schema 2020-12
         run: |
@@ -51,12 +52,15 @@ jobs:
           print("protocol.schema.json: valid", schema.get("$schema"), "title=", schema.get("title"), "version=", schema.get("version"))
           PY
 
-      - name: Validate CITATION.cff parses
+      - name: Run the protocol consistency tests
+        run: python -m pytest -v -p no:cacheprovider
+
+      # A parse-only check accepted `cff-version: 1.6.0`, which is not a CFF
+      # version. cffconvert validates against the official CFF schema. It
+      # needs jsonschema<4, so it gets its own virtualenv.
+      - name: Validate CITATION.cff (cffconvert, strict CFF schema)
         run: |
-          python - <<'PY'
-          import yaml
-          cff = yaml.safe_load(open("CITATION.cff", encoding="utf-8"))
-          assert cff.get("cff-version"), "cff-version missing"
-          assert cff.get("title"), "title missing"
-          print("CITATION.cff: cff-version", cff["cff-version"], "-", cff["title"])
-          PY
+          python -m venv "$RUNNER_TEMP/cffconvert"
+          "$RUNNER_TEMP/cffconvert/bin/python" -m pip install \
+            --disable-pip-version-check --no-cache-dir -r requirements-citation.txt
+          "$RUNNER_TEMP/cffconvert/bin/cffconvert" --validate -i CITATION.cff
