@@ -29,3 +29,11 @@ A pre-declared, versioned experimental protocol that separates:
 ## Contributing
 
 This is a two-party collaboration. The package freezes when both parties agree on all sections.
+
+## Relation to the estate
+
+Part of the [SZL Holdings](https://github.com/szl-holdings) GitHub estate; models, datasets and Spaces are published under the [SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS) Hugging Face org.
+
+## License
+
+Apache-2.0 — see [LICENSE](LICENSE).
