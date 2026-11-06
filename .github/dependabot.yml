@@ -4,8 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+  # pip is omitted on purpose. This repository is a specification (Markdown,
+  # JSON Schema, CITATION.cff) with no Python package manifest. A pip entry
+  # makes the Dependabot updater fail with dependency_file_not_found
+  # (see Dependabot run 42129529664 / #1684153590).
