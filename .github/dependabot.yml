@@ -4,12 +4,23 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  # requirements-test.txt and requirements-citation.txt pin the validators CI
-  # runs (pytest suite and cffconvert). The earlier pip entry failed with
-  # dependency_file_not_found (Dependabot run 42129500386 / #1684153590)
-  # because no pip manifest existed then; these two files are that manifest.
+  # requirements-test.txt and requirements-citation.txt are the top-level pins
+  # of the validators (pytest suite and cffconvert). The earlier pip entry
+  # failed with dependency_file_not_found (Dependabot run 42129500386 /
+  # #1684153590) because no pip manifest existed then; these two files are
+  # that manifest.
   - package-ecosystem: "pip"
     directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+  # Hash-locked closures that ci.yml installs with --require-hashes
+  # (requirements/ci/test.txt, citation.txt, citation-build.txt). Their
+  # top-level pins come from the two files above; after a bump there,
+  # recompile them as their .in files describe.
+  # tests/test_ci_requirements_lock.py fails on any drift.
+  - package-ecosystem: "pip"
+    directory: "/requirements/ci"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5

@@ -1,0 +1,10 @@
+# Build backend for the one sdist-only package in citation.txt (docopt 0.6.2,
+# required by pykwalify). ci.yml installs this hash-locked setuptools first and
+# then installs citation.txt with --no-build-isolation, because pip does not
+# hash-check the build dependencies it fetches into an isolated build
+# environment. Pinned to the setuptools version in citation.txt
+# (tests/test_ci_requirements_lock.py fails on drift):
+#   uv pip compile --universal --generate-hashes --python-version 3.12 \
+#     --constraint requirements/ci/citation.txt \
+#     requirements/ci/citation-build.in -o requirements/ci/citation-build.txt
+setuptools

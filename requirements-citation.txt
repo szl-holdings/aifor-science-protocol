@@ -1,4 +1,8 @@
 # Strict CITATION.cff validator (cffconvert --validate -i CITATION.cff).
 # Kept apart from requirements-test.txt: cffconvert 2.0.0 requires
 # jsonschema<4, while the tests need jsonschema 4 for draft 2020-12.
+# CI installs requirements/ci/citation.txt, the hash-locked closure compiled
+# from this file: recompile it after any change here (see
+# requirements/ci/citation.in; tests/test_ci_requirements_lock.py fails on
+# drift).
 cffconvert==2.0.0

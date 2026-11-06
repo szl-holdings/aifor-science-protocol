@@ -6,7 +6,9 @@ name: CI
 # schema is a valid JSON Schema 2020-12 document, that PROTOCOL.md, the schema,
 # README.md and CITATION.cff agree with each other (tests/), and that
 # CITATION.cff passes the strict CFF validator. They prove nothing about any
-# experiment: none exists in this repository.
+# experiment: none exists in this repository. Every pip install below uses a
+# hash-locked closure from requirements/ci/ (tests/test_ci_requirements_lock.py
+# checks that, and that the closures match the top-level pins).
 
 on:
   push:
@@ -37,10 +39,13 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install pinned test dependencies
+      # requirements/ci/test.txt is the hash-locked closure of the top-level
+      # pins in requirements-test.txt: pip verifies every download against a
+      # SHA-256 recorded in the repository and installs wheels only.
+      - name: Install hash-locked test dependencies
         run: >-
           python -m pip install --disable-pip-version-check --no-cache-dir
-          -r requirements-test.txt
+          --require-hashes --only-binary=:all: -r requirements/ci/test.txt
 
       - name: Validate protocol.schema.json against JSON Schema 2020-12
         run: |
@@ -57,10 +62,15 @@ jobs:
 
       # A parse-only check accepted `cff-version: 1.6.0`, which is not a CFF
       # version. cffconvert validates against the official CFF schema. It
-      # needs jsonschema<4, so it gets its own virtualenv.
+      # needs jsonschema<4, so it gets its own virtualenv, installed from the
+      # hash-locked closure requirements/ci/citation.txt. One package in it,
+      # docopt 0.6.2 (via pykwalify), ships only an sdist. pip does not
+      # hash-check the build dependencies it fetches into an isolated build
+      # environment, so the hash-locked setuptools from citation-build.txt is
+      # installed first and docopt is built with it (--no-build-isolation).
       - name: Validate CITATION.cff (cffconvert, strict CFF schema)
         run: |
           python -m venv "$RUNNER_TEMP/cffconvert"
-          "$RUNNER_TEMP/cffconvert/bin/python" -m pip install \
-            --disable-pip-version-check --no-cache-dir -r requirements-citation.txt
+          "$RUNNER_TEMP/cffconvert/bin/python" -m pip install --disable-pip-version-check --no-cache-dir --require-hashes --only-binary=:all: -r requirements/ci/citation-build.txt
+          "$RUNNER_TEMP/cffconvert/bin/python" -m pip install --disable-pip-version-check --no-cache-dir --require-hashes --only-binary=:all: --no-binary=docopt --no-build-isolation -r requirements/ci/citation.txt
           "$RUNNER_TEMP/cffconvert/bin/cffconvert" --validate -i CITATION.cff
