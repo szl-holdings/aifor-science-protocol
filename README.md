@@ -102,6 +102,10 @@ CI runs the same checks in [`.github/workflows/ci.yml`](.github/workflows/ci.yml
 
 This is a two-party collaboration. The package freezes when both parties agree on all sections.
 
+## Relation to the estate
+
+Part of the [SZL Holdings](https://github.com/szl-holdings) GitHub estate; models, datasets and Spaces are published under the [SZLHOLDINGS](https://huggingface.co/SZLHOLDINGS) Hugging Face org.
+
 ## License
 
 The [`LICENSE`](LICENSE) file is Apache-2.0. [`PROTOCOL.md`](PROTOCOL.md) (License section) and [`CITATION.cff`](CITATION.cff) declare CC-BY-4.0 for the protocol package. The two declarations conflict, and the collaborators have not yet reconciled them.
