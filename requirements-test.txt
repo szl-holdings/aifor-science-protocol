@@ -1,0 +1,5 @@
+# Pinned dependencies for the consistency tests in tests/ (python -m pytest).
+# Used by .github/workflows/ci.yml and README.md; Dependabot (pip) bumps them.
+jsonschema==4.26.0
+PyYAML==6.0.3
+pytest==9.2.0

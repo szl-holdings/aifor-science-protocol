@@ -1,4 +1,4 @@
-cff-version: 1.6.0
+cff-version: 1.2.0
 message: "If you use this protocol package, please cite both collaborators."
 title: "AI-for-Science Validation Protocol Package"
 type: software
@@ -8,7 +8,7 @@ authors:
   - name: "ankitjha2519020708"
 repository-code: "https://github.com/szl-holdings/aifor-science-protocol"
 license: CC-BY-4.0
-version: "0.1.0"
+version: "0.1.0-draft"
 date-released: "2026-11-05"
 keywords:
   - ai-for-science

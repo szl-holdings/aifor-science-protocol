@@ -1,0 +1,4 @@
+# Strict CITATION.cff validator (cffconvert --validate -i CITATION.cff).
+# Kept apart from requirements-test.txt: cffconvert 2.0.0 requires
+# jsonschema<4, while the tests need jsonschema 4 for draft 2020-12.
+cffconvert==2.0.0

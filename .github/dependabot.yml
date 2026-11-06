@@ -4,7 +4,12 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-  # pip is omitted on purpose. This repository is a specification (Markdown,
-  # JSON Schema, CITATION.cff) with no Python package manifest. A pip entry
-  # makes the Dependabot updater fail with dependency_file_not_found
-  # (see Dependabot run 42129529664 / #1684153590).
+  # requirements-test.txt and requirements-citation.txt pin the validators CI
+  # runs (pytest suite and cffconvert). The earlier pip entry failed with
+  # dependency_file_not_found (Dependabot run 42129500386 / #1684153590)
+  # because no pip manifest existed then; these two files are that manifest.
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
