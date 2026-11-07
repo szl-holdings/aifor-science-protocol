@@ -1,0 +1,192 @@
+{
+ "schema_version": "szl.queue-snapshot/v1",
+ "protocol_version": "v0.1.0-draft",
+ "snapshot_id": "qs-example-001",
+ "generated_at": "2026-11-07T00:00:00Z",
+ "eligibility": [
+  {
+   "id": "e1",
+   "statement": "candidate passes material pre-checks"
+  },
+  {
+   "id": "e2",
+   "statement": "batch within calibration window"
+  }
+ ],
+ "exclusions": [
+  {
+   "id": "x1",
+   "statement": "instrument malfunction documented before outcome review",
+   "applies_to": "per_protocol_only"
+  },
+  {
+   "id": "x2",
+   "statement": "contamination events with recorded physical evidence",
+   "applies_to": "per_protocol_only"
+  },
+  {
+   "id": "x3",
+   "statement": "queue entries cancelled before any resource consumption",
+   "applies_to": "per_protocol_only"
+  }
+ ],
+ "contamination_controls": {
+  "pre_assignment_gates": [
+   {
+    "id": "g1",
+    "evidence_required": "objective_physical_evidence",
+    "timing": "before_assignment",
+    "outcome_pass": "admit to randomization",
+    "outcome_fail": "hold out of this randomization; record as ineligible with reason"
+   }
+  ],
+  "residual_risk_covariates": [
+   "baseline_instrument_drift",
+   "operator_schedule_overlap"
+  ],
+  "sensitivity_analyses": [
+   "primary re-estimated with baseline_instrument_drift covariate removed",
+   "primary re-estimated excluding clusters with any logged contamination deviation"
+  ]
+ },
+ "clustering": {
+  "primary_key": "shared_assignment_interference_unit",
+  "assignment_unit": "batch-instrument-slot",
+  "interference_unit": "batch-instrument-slot",
+  "aligned_with": [
+   "batch",
+   "instrument_slot"
+  ],
+  "carryover_rule": "carryover_crossing_the_unit_requires_a_broader_cluster_declaration_before_randomization",
+  "queue_entry_ids_are": "separate_observations"
+ },
+ "cluster_roster": [
+  {
+   "cluster_id": "cl-1",
+   "arm": "candidate",
+   "randomized_at": "2026-11-07T01:00:00Z",
+   "status": "randomized",
+   "batch": "b1",
+   "instrument_slots": [
+    "s1"
+   ]
+  },
+  {
+   "cluster_id": "cl-2",
+   "arm": "control",
+   "randomized_at": "2026-11-07T01:00:00Z",
+   "status": "randomized",
+   "batch": "b1",
+   "instrument_slots": [
+    "s2"
+   ]
+  },
+  {
+   "cluster_id": "cl-3",
+   "arm": "control",
+   "randomized_at": "2026-11-07T01:00:00Z",
+   "status": "excluded",
+   "exclusion_reason": "instrument malfunction documented before outcome review",
+   "batch": "b1",
+   "instrument_slots": [
+    "s3"
+   ]
+  }
+ ],
+ "queue_entries": [
+  {
+   "queue_entry_id": "qe-1",
+   "cluster_id": "cl-1",
+   "eligible": true,
+   "events": [
+    {
+     "type": "reservation",
+     "timestamp": "2026-11-07T01:10:00Z"
+    },
+    {
+     "type": "initiation",
+     "timestamp": "2026-11-07T01:20:00Z"
+    },
+    {
+     "type": "charging",
+     "timestamp": "2026-11-07T01:21:00Z"
+    }
+   ]
+  },
+  {
+   "queue_entry_id": "qe-2",
+   "cluster_id": "cl-2",
+   "eligible": true,
+   "contamination": {
+    "status": "post_assignment_deviation",
+    "evidence": "physical evidence recorded in lab notebook p.44",
+    "detected_at": "2026-11-07T02:00:00Z",
+    "handling": "logged_deviation_itt_retained"
+   },
+   "events": [
+    {
+     "type": "reservation",
+     "timestamp": "2026-11-07T01:10:00Z"
+    },
+    {
+     "type": "initiation",
+     "timestamp": "2026-11-07T01:25:00Z"
+    },
+    {
+     "type": "charging",
+     "timestamp": "2026-11-07T01:26:00Z"
+    }
+   ]
+  },
+  {
+   "queue_entry_id": "qe-3",
+   "cluster_id": "cl-2",
+   "eligible": true,
+   "events": [
+    {
+     "type": "reservation",
+     "timestamp": "2026-11-07T03:10:00Z"
+    },
+    {
+     "type": "cancellation",
+     "timestamp": "2026-11-07T03:15:00Z"
+    }
+   ]
+  },
+  {
+   "queue_entry_id": "qe-4",
+   "cluster_id": "cl-1",
+   "eligible": true,
+   "events": [
+    {
+     "type": "reservation",
+     "timestamp": "2026-11-07T04:10:00Z"
+    }
+   ]
+  }
+ ],
+ "provenance": {
+  "repository_revision": "643a67a5",
+  "schema_version": "szl.queue-snapshot/v1",
+  "runtime_versions": {
+   "python": "3.12",
+   "library": "queue_snapshot v0.1.0"
+  },
+  "generated_artifacts": [
+   "queue-snapshot/schema.json",
+   "queue_snapshot.py"
+  ],
+  "validation": {
+   "valid": true,
+   "checks": [
+    "clustering",
+    "event_sequence",
+    "charging_semantics",
+    "contamination_handling",
+    "carryover_boundary"
+   ]
+  }
+ },
+ "frozen": true,
+ "package_sha256": "bd6f0beaf116c909281b4454d64391d1d47bdc17223b10f4f7dae0ff41a3c438"
+}

@@ -1,0 +1,122 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/szl-holdings/aifor-science-protocol/queue-snapshot/schema.json",
+  "title": "Section 4 Queue Snapshot",
+  "version": "0.1.0",
+  "type": "object",
+  "required": ["schema_version", "protocol_version", "snapshot_id", "generated_at",
+               "provenance", "eligibility", "exclusions", "contamination_controls",
+               "clustering", "cluster_roster", "queue_entries"],
+  "properties": {
+    "schema_version": {"const": "szl.queue-snapshot/v1"},
+    "protocol_version": {"type": "string"},
+    "snapshot_id": {"type": "string", "pattern": "^qs-[0-9a-z-]+$"},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "frozen": {"type": "boolean", "default": false},
+    "package_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "provenance": {
+      "type": "object",
+      "required": ["repository_revision", "schema_version", "runtime_versions", "validation"],
+      "properties": {
+        "repository_revision": {"type": "string", "pattern": "^[0-9a-f]{7,40}$"},
+        "schema_version": {"type": "string"},
+        "runtime_versions": {"type": "object"},
+        "generated_artifacts": {"type": "array", "items": {"type": "string"}},
+        "validation": {"type": "object", "required": ["valid", "checks"],
+                       "properties": {"valid": {"type": "boolean"},
+                                      "checks": {"type": "array", "items": {"type": "string"}}}}
+      }
+    },
+    "eligibility": {"type": "array", "items": {"$ref": "#/$defs/criterion"}},
+    "exclusions": {"type": "array", "items": {"$ref": "#/$defs/exclusion"}},
+    "contamination_controls": {
+      "type": "object",
+      "required": ["pre_assignment_gates", "residual_risk_covariates", "sensitivity_analyses"],
+      "properties": {
+        "pre_assignment_gates": {"type": "array", "items": {"$ref": "#/$defs/gate"}},
+        "residual_risk_covariates": {"type": "array", "items": {"type": "string"}},
+        "sensitivity_analyses": {"type": "array", "items": {"type": "string"},
+          "description": "Declared before analysis; each names the covariate and the perturbation"}
+      }
+    },
+    "clustering": {
+      "type": "object",
+      "required": ["primary_key", "assignment_unit", "interference_unit", "carryover_rule"],
+      "properties": {
+        "primary_key": {"const": "shared_assignment_interference_unit"},
+        "assignment_unit": {"type": "string"},
+        "interference_unit": {"type": "string"},
+        "aligned_with": {"type": "array", "items": {"enum": ["batch", "instrument_slot"]}},
+        "carryover_rule": {"const": "carryover_crossing_the_unit_requires_a_broader_cluster_declaration_before_randomization"},
+        "queue_entry_ids_are": {"const": "separate_observations"}
+      }
+    },
+    "cluster_roster": {
+      "type": "array",
+      "description": "The COMPLETE randomized cluster roster: every randomized unit appears, including excluded/ineligible ones with explicit reasons",
+      "items": {
+        "type": "object",
+        "required": ["cluster_id", "arm", "randomized_at"],
+        "properties": {
+          "cluster_id": {"type": "string"},
+          "arm": {"enum": ["candidate", "control"]},
+          "randomized_at": {"type": "string", "format": "date-time"},
+          "status": {"enum": ["randomized", "excluded", "ineligible"]},
+          "exclusion_reason": {"type": "string"},
+          "batch": {"type": "string"},
+          "instrument_slots": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "queue_entries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["queue_entry_id", "cluster_id", "events"],
+        "properties": {
+          "queue_entry_id": {"type": "string", "pattern": "^qe-[0-9a-z-]+$"},
+          "cluster_id": {"type": "string"},
+          "eligible": {"type": "boolean"},
+          "exclusion_reason": {"type": "string"},
+          "contamination": {"$ref": "#/$defs/contamination"},
+          "events": {"type": "array", "items": {"$ref": "#/$defs/event"}}
+        }
+      }
+    }
+  },
+  "$defs": {
+    "criterion": {"type": "object", "required": ["id", "statement"],
+                  "properties": {"id": {"type": "string"}, "statement": {"type": "string"}}},
+    "exclusion": {"type": "object", "required": ["id", "statement", "applies_to"],
+                  "properties": {"id": {"type": "string"}, "statement": {"type": "string"},
+                                 "applies_to": {"enum": ["per_protocol_only", "both"]}}},
+    "gate": {"type": "object", "required": ["id", "evidence_required", "timing"],
+             "properties": {"id": {"type": "string"},
+                            "evidence_required": {"const": "objective_physical_evidence"},
+                            "timing": {"const": "before_assignment"},
+                            "outcome_pass": {"type": "string"},
+                            "outcome_fail": {"type": "string"}}},
+    "contamination": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"enum": ["none", "pre_assignment_evidenced", "post_assignment_deviation"]},
+        "evidence": {"type": "string"},
+        "detected_at": {"type": "string", "format": "date-time"},
+        "handling": {"enum": ["gate_before_assignment", "logged_deviation_itt_retained",
+                               "per_protocol_exclusion_with_evidence"]},
+        "covariate_recorded": {"type": "string"}
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["type", "timestamp"],
+      "properties": {
+        "type": {"enum": ["reservation", "initiation", "charging", "cancellation",
+                           "timeout", "attempted_execution"]},
+        "timestamp": {"type": "string", "format": "date-time"},
+        "evidence": {"type": "string"}
+      }
+    }
+  }
+}
