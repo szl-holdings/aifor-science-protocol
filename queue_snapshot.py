@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any
 
 SCHEMA_VERSION = "szl.queue-snapshot/v1"
 EVENT_ORDER = ["reservation", "initiation", "charging",
@@ -37,6 +36,17 @@ EVENT_ORDER = ["reservation", "initiation", "charging",
 
 class SnapshotError(ValueError):
     """Raised when a snapshot violates the Section 4 semantics."""
+
+
+def _parse_ts(value):
+    """Parse an RFC3339 timestamp; raise on malformed input (fail-closed)."""
+    from datetime import datetime
+    if not isinstance(value, str) or not value:
+        raise SnapshotError(f"invalid or missing timestamp: {value!r}")
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise SnapshotError(f"malformed RFC3339 timestamp {value!r}: {exc}") from exc
 
 
 def canonical_bytes(snapshot: dict) -> bytes:
@@ -81,6 +91,12 @@ def check_charging(entry: dict) -> None:
 
 
 def check_event_sequence(entry: dict) -> None:
+    """Every event's type must be one of the six declared types (enforced)."""
+    for e in _events(entry):
+        if e.get("type") not in EVENT_ORDER:
+            raise SnapshotError(
+                f"{entry['queue_entry_id']}: undeclared event type {e.get('type')!r} "
+                f"(declared: {EVENT_ORDER})")
     """Reservation precedes initiation precedes charging; every event has a timestamp."""
     events = _events(entry)
     for e in events:
@@ -90,24 +106,36 @@ def check_event_sequence(entry: dict) -> None:
     res = _first_ts(entry, "reservation")
     ini = _first_ts(entry, "initiation")
     cha = _first_ts(entry, "charging")
-    if res and ini and ini < res:
+    if res and ini and _parse_ts(ini) < _parse_ts(res):
         raise SnapshotError(f"{entry['queue_entry_id']}: initiation before reservation")
-    if ini and cha and cha < ini:
+    if ini and cha and _parse_ts(cha) < _parse_ts(ini):
         raise SnapshotError(f"{entry['queue_entry_id']}: charging before initiation")
 
 
 def check_contamination(entry: dict, randomized_at: str | None) -> None:
+    """randomized_at MUST be resolvable for timing reclassification; a cluster
+    with unknown randomization time forces the deviation reading (fail-closed)."""
     """Hybrid contamination handling (Section 4 required semantics)."""
     c = entry.get("contamination") or {"status": "none"}
     status = c.get("status", "none")
+    KNOWN_CONTAMINATION = {"none", "pre_assignment_evidenced", "post_assignment_deviation"}
+    if status not in KNOWN_CONTAMINATION:
+        raise SnapshotError(
+            f"{entry['queue_entry_id']}: unknown contamination status {status!r} "
+            f"(known: {sorted(KNOWN_CONTAMINATION)})")
     if status == "none":
         return
     if status == "pre_assignment_evidenced":
-        # objective, evidenced gate BEFORE assignment
+        # objective, evidenced gate BEFORE assignment; the timing check is
+        # MANDATORY: unknown randomization time reads as post-assignment
+        if not randomized_at:
+            raise SnapshotError(
+                f"{entry['queue_entry_id']}: pre-assignment contamination cannot "
+                "be verified without the cluster's randomized_at (fail-closed)")
         if not c.get("evidence"):
             raise SnapshotError(
                 f"{entry['queue_entry_id']}: pre-assignment contamination requires evidence")
-        if randomized_at and c.get("detected_at") and c["detected_at"] > randomized_at:
+        if randomized_at and c.get("detected_at") and _parse_ts(c["detected_at"]) > _parse_ts(randomized_at):
             raise SnapshotError(
                 f"{entry['queue_entry_id']}: pre-assignment contamination detected after "
                 "randomization is a post-assignment deviation, not a gate")
@@ -174,6 +202,13 @@ def check_carryover(snapshot: dict, carryover_pairs: list[tuple[str, str]] | Non
                 raise SnapshotError(
                     f"carryover between {a} and {b} crosses the assignment/interference "
                     "unit; a broader cluster declaration was required BEFORE randomization")
+            # the declaration must PRECEDE both units' randomization (enforced)
+            decl = _parse_ts(broader)
+            for unit in (a, b):
+                if _parse_ts(randomized_ats[unit]) < decl:
+                    raise SnapshotError(
+                        f"broader cluster declaration for carryover ({a}, {b}) came "
+                        f"AFTER {unit}'s randomization; it was required BEFORE")
 
 
 def validate(snapshot: dict,
