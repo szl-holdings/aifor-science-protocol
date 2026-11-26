@@ -4,5 +4,5 @@
 # here (see requirements/ci/test.in; tests/test_ci_requirements_lock.py fails
 # on drift). Dependabot's pip entries watch this file and requirements/ci/.
 jsonschema==4.26.0
-PyYAML==6.0.3
+PyYAML==6.0.4
 pytest==9.2.0

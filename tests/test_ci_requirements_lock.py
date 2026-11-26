@@ -338,3 +338,11 @@ jobs:
         ("--require-hashes", "--only-binary=:all:", "--no-binary=docopt",
          "-r", "requirements/ci/citation.txt")
     ) == ["builds an sdist in an isolated (unhashed) build environment"]
+
+
+def test_pyyaml_pin_upgrade_rejects_stale_lock() -> None:
+    pins = top_level_pins("PyYAML==6.0.4")
+    fresh = locked_entries("pyyaml==6.0.4\n    --hash=sha256:" + "a" * 64)
+    stale = locked_entries("pyyaml==6.0.3\n    --hash=sha256:" + "b" * 64)
+    assert drift(pins, fresh) == []
+    assert drift(pins, stale) == ["pyyaml==6.0.4 is locked at 6.0.3"]
